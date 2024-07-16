@@ -11,5 +11,6 @@ FROM alpine:latest
 ENV GO_ENV=production
 WORKDIR /root/
 COPY --from=builder /app/main .
+COPY --from=builder /app/*.html .
 EXPOSE 8080
 CMD ["./main"]
