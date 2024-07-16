@@ -7,11 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func setupServer() {
-	http.HandleFunc("/", rootEndpoint)
-	http.HandleFunc("/ws", wsEndpoint)
-}
-
 func rootEndpoint(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "index.html")
 }
@@ -52,6 +47,11 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	setupServer()
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", rootEndpoint)
+	mux.HandleFunc("GET /ws", wsEndpoint)
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Println(err.Error())
+	}
 }
