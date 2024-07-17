@@ -33,20 +33,41 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Client connected")
-	reader(ws)
+
+	posts, err := h.service.GetPosts()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println("Replay posts")
+	for _, post := range posts {
+		buff := ([]byte)(post.Text)
+		ws.WriteMessage(1, buff)
+	}
+
+	log.Println("Run message relay")
+	reader(h, ws)
 }
 
-func reader(ws *websocket.Conn) {
+func reader(h PostHandler, ws *websocket.Conn) {
 	for {
 		messageType, buff, err := ws.ReadMessage()
+
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		log.Println(string(buff))
-		if err := ws.WriteMessage(messageType, buff); err != nil {
-			log.Println(err)
-			return
+
+		text := string(buff)
+		log.Println(text)
+
+		if len(text) != 0 {
+			h.service.AddPost(services.CreatePostRequest{From: "unknown", Text: text})
+			if err := ws.WriteMessage(messageType, buff); err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 }

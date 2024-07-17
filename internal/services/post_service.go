@@ -30,10 +30,17 @@ func (s *PostService) AddPost(r CreatePostRequest) error {
 		From: r.From,
 		Text: r.Text,
 	}
-	_ = p
-	return nil
+	return s.repository.AddPost(p)
 }
 
 func (s *PostService) GetPosts() ([]PostResponse, error) {
-	return nil, nil
+	posts, err := s.repository.GetPosts()
+	if err != nil {
+		return nil, err
+	}
+	results := make([]PostResponse, 0)
+	for _, p := range posts {
+		results = append(results, PostResponse{From: p.From, Text: p.Text})
+	}
+	return results, nil
 }
