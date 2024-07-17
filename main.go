@@ -12,6 +12,7 @@ import (
 	"github.com/RomanGolovanov/go-chat-playground/api"
 	"github.com/RomanGolovanov/go-chat-playground/internal/services"
 	"github.com/RomanGolovanov/go-chat-playground/internal/storages"
+	"github.com/RomanGolovanov/go-chat-playground/middleware"
 )
 
 const (
@@ -28,19 +29,26 @@ func main() {
 	postService := services.NewPostService(postRepository)
 	postHandler := api.NewPostHandler(postService)
 
-	mux := http.NewServeMux()
+	router := http.NewServeMux()
 
-	mux.Handle("/ws", postHandler)
-	mux.Handle("/", spa)
+	router.Handle("/ws", postHandler)
+	router.Handle("/", spa)
 
 	log.Printf("Starting web server on %s\n", *address)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	corsOptions := middleware.CorsOptions{
+		AllowOrigin:      "*",
+		AllowHeaders:     "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token",
+		AllowMethods:     "POST, GET, OPTIONS, PUT, DELETE",
+		AllowCredentials: "true",
+	}
+
 	server := &http.Server{
 		Addr:    *address,
-		Handler: mux,
+		Handler: middleware.Logging(middleware.Cors(router, corsOptions)),
 	}
 
 	go func() {
