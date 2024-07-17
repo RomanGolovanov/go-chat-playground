@@ -1,4 +1,4 @@
-package handlers
+package api
 
 import (
 	"net/http"
@@ -8,17 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func HandleSpa(router *mux.Router, pathPrefix, staticPath, indexPath string) {
-	spa := spaHandler{staticPath, indexPath}
+func HandleSpa(router *mux.Router, pathPrefix string, spa *SpaHandler) {
 	router.PathPrefix(pathPrefix).Handler(spa)
 }
 
-type spaHandler struct {
+type SpaHandler struct {
 	staticPath string
 	indexPath  string
 }
 
-func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func NewSpaHandler(staticPath, indexPath string) *SpaHandler {
+	return &SpaHandler{staticPath: staticPath, indexPath: indexPath}
+}
+
+func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(h.staticPath, r.URL.Path)
 
 	fi, err := os.Stat(path)

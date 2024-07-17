@@ -1,25 +1,32 @@
-package handlers
+package api
 
 import (
 	"log"
 	"net/http"
 
+	"github.com/RomanGolovanov/go-chat-playground/internal/services"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
-func HandleWebSocket(router *mux.Router, pathPrefix string) {
-	router.PathPrefix(pathPrefix).Handler(wsHandler{})
+type PostHandler struct {
+	service *services.PostService
 }
 
-type wsHandler struct{}
+func NewPostHandler(service *services.PostService) *PostHandler {
+	return &PostHandler{service: service}
+}
+
+func HandlePostsWebSocket(router *mux.Router, pathPrefix string, handler *PostHandler) {
+	router.PathPrefix(pathPrefix).Handler(handler)
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
-func (h wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

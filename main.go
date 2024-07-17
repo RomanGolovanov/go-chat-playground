@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/RomanGolovanov/go-chat-playground/handlers"
+	"github.com/RomanGolovanov/go-chat-playground/api"
+	"github.com/RomanGolovanov/go-chat-playground/internal/services"
+	"github.com/RomanGolovanov/go-chat-playground/internal/storages"
 	"github.com/gorilla/mux"
 )
 
@@ -17,10 +19,16 @@ func main() {
 	address := flag.String("address", defaultAddress, "Listening address in format <ip>:<port>")
 	flag.Parse()
 
+	spa := api.NewSpaHandler("static", "index.html")
+
+	postRepository := storages.NewInMemoryPostRepository()
+	postService := services.NewPostService(postRepository)
+	postHandler := api.NewPostHandler(postService)
+
 	router := mux.NewRouter()
 
-	handlers.HandleWebSocket(router, "/ws")
-	handlers.HandleSpa(router, "/", "static", "index.html")
+	api.HandlePostsWebSocket(router, "/ws", postHandler)
+	api.HandleSpa(router, "/", spa)
 
 	log.Printf("Starting web server on %s\n", *address)
 	err := http.ListenAndServe(*address, router)
