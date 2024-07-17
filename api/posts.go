@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/RomanGolovanov/go-chat-playground/internal/services"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -16,10 +15,6 @@ type PostHandler struct {
 
 func NewPostHandler(service *services.PostService) *PostHandler {
 	return &PostHandler{service: service}
-}
-
-func HandlePostsWebSocket(router *mux.Router, pathPrefix string, handler *PostHandler) {
-	router.PathPrefix(pathPrefix).Handler(handler)
 }
 
 var upgrader = websocket.Upgrader{

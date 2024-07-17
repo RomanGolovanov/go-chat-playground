@@ -4,13 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/gorilla/mux"
 )
-
-func HandleSpa(router *mux.Router, pathPrefix string, spa *SpaHandler) {
-	router.PathPrefix(pathPrefix).Handler(spa)
-}
 
 type SpaHandler struct {
 	staticPath string

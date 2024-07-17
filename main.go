@@ -12,7 +12,6 @@ import (
 	"github.com/RomanGolovanov/go-chat-playground/api"
 	"github.com/RomanGolovanov/go-chat-playground/internal/services"
 	"github.com/RomanGolovanov/go-chat-playground/internal/storages"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -29,10 +28,10 @@ func main() {
 	postService := services.NewPostService(postRepository)
 	postHandler := api.NewPostHandler(postService)
 
-	router := mux.NewRouter()
+	mux := http.NewServeMux()
 
-	api.HandlePostsWebSocket(router, "/ws", postHandler)
-	api.HandleSpa(router, "/", spa)
+	mux.Handle("/ws", postHandler)
+	mux.Handle("/", spa)
 
 	log.Printf("Starting web server on %s\n", *address)
 
@@ -41,7 +40,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    *address,
-		Handler: router,
+		Handler: mux,
 	}
 
 	go func() {
