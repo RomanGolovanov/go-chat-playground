@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -27,6 +28,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -34,7 +36,7 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Client connected")
 
-	posts, err := h.service.GetPosts()
+	posts, err := h.service.GetPosts(ctx)
 	if err != nil {
 		log.Println(err)
 		return
@@ -47,10 +49,10 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Run message relay")
-	reader(h, ws)
+	reader(ctx, h, ws)
 }
 
-func reader(h PostHandler, ws *websocket.Conn) {
+func reader(ctx context.Context, h PostHandler, ws *websocket.Conn) {
 	for {
 		messageType, buff, err := ws.ReadMessage()
 
@@ -63,7 +65,7 @@ func reader(h PostHandler, ws *websocket.Conn) {
 		log.Println(text)
 
 		if len(text) != 0 {
-			h.service.AddPost(services.CreatePostRequest{From: "unknown", Text: text})
+			h.service.AddPost(ctx, services.CreatePostRequest{From: "unknown", Text: text})
 			if err := ws.WriteMessage(messageType, buff); err != nil {
 				log.Println(err)
 				return

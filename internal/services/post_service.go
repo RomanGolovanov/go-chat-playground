@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"time"
 
 	"github.com/RomanGolovanov/go-chat-playground/internal/types"
@@ -24,17 +25,17 @@ type PostResponse struct {
 	Text string
 }
 
-func (s *PostService) AddPost(r CreatePostRequest) error {
+func (s *PostService) AddPost(ctx context.Context, r CreatePostRequest) error {
 	p := types.Post{
 		Time: time.Now(),
 		From: r.From,
 		Text: r.Text,
 	}
-	return s.repository.AddPost(p)
+	return s.repository.AddPost(ctx, p)
 }
 
-func (s *PostService) GetPosts() ([]PostResponse, error) {
-	posts, err := s.repository.GetPosts()
+func (s *PostService) GetPosts(ctx context.Context) ([]PostResponse, error) {
+	posts, err := s.repository.GetPosts(ctx)
 	if err != nil {
 		return nil, err
 	}

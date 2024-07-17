@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/RomanGolovanov/go-chat-playground/api"
 	"github.com/RomanGolovanov/go-chat-playground/internal/services"
@@ -31,8 +35,34 @@ func main() {
 	api.HandleSpa(router, "/", spa)
 
 	log.Printf("Starting web server on %s\n", *address)
-	err := http.ListenAndServe(*address, router)
-	if err != nil {
-		log.Fatalln(err.Error())
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	server := &http.Server{
+		Addr:    *address,
+		Handler: router,
 	}
+
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			log.Fatalf("Server shutdown: %v\n", err)
+		}
+
+	}()
+
+	<-ctx.Done()
+
+	log.Println("Shutting down gracefully, press Ctrl+C again to force")
+	stop()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exiting")
 }

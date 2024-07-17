@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type Post struct {
 	Time time.Time
@@ -9,6 +12,6 @@ type Post struct {
 }
 
 type PostRepository interface {
-	AddPost(post Post) error
-	GetPosts() ([]Post, error)
+	AddPost(ctx context.Context, post Post) error
+	GetPosts(ctx context.Context) ([]Post, error)
 }

@@ -1,6 +1,8 @@
 package storages
 
 import (
+	"context"
+
 	"github.com/RomanGolovanov/go-chat-playground/internal/types"
 )
 
@@ -14,11 +16,11 @@ func NewInMemoryPostRepository() *InMemoryPostRepository {
 	}
 }
 
-func (s *InMemoryPostRepository) AddPost(post types.Post) error {
+func (s *InMemoryPostRepository) AddPost(ctx context.Context, post types.Post) error {
 	s.posts = append(s.posts, post)
 	return nil
 }
 
-func (s *InMemoryPostRepository) GetPosts() ([]types.Post, error) {
+func (s *InMemoryPostRepository) GetPosts(ctx context.Context) ([]types.Post, error) {
 	return s.posts, nil
 }
