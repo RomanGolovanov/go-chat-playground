@@ -20,24 +20,39 @@ const (
 )
 
 func main() {
-	address := flag.String("address", defaultAddress, "Listening address in format <ip>:<port>")
-	flag.Parse()
-
-	spa := api.NewSpaHandler("static", "index.html")
-
-	postRepository := storages.NewInMemoryPostRepository()
-	postService := services.NewPostService(postRepository)
-	postHandler := api.NewPostHandler(postService)
-
-	router := http.NewServeMux()
-
-	router.Handle("/ws", postHandler)
-	router.Handle("/", spa)
-
-	log.Printf("Starting web server on %s\n", *address)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	server := RunServer()
+
+	<-ctx.Done()
+
+	log.Println("Shutting down gracefully, press Ctrl+C again to force")
+	stop()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exiting")
+}
+
+func RunServer() *http.Server {
+
+	address := flag.String("address", defaultAddress, "Listening address in format <ip>:<port>")
+	flag.Parse()
+	log.Printf("Starting web server on %s\n", *address)
+
+	postRepository := storages.NewInMemoryPostRepository()
+	postService := services.NewPostService(postRepository)
+
+	router := http.NewServeMux()
+	router.Handle("/ws", api.NewPostHandler(postService))
+	router.Handle("/", api.NewSpaHandler("static", "index.html"))
 
 	server := &http.Server{
 		Addr: *address,
@@ -60,17 +75,5 @@ func main() {
 
 	}()
 
-	<-ctx.Done()
-
-	log.Println("Shutting down gracefully, press Ctrl+C again to force")
-	stop()
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	log.Println("Server exiting")
+	return server
 }
