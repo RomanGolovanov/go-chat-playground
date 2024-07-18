@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/RomanGolovanov/go-chat-playground/api"
+	"github.com/RomanGolovanov/go-chat-playground/api/middleware"
 	"github.com/RomanGolovanov/go-chat-playground/internal/services"
 	"github.com/RomanGolovanov/go-chat-playground/internal/storages"
-	"github.com/RomanGolovanov/go-chat-playground/middleware"
 )
 
 const (
@@ -39,16 +39,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	corsOptions := middleware.CorsOptions{
-		AllowOrigin:      "*",
-		AllowHeaders:     "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token",
-		AllowMethods:     "POST, GET, OPTIONS, PUT, DELETE",
-		AllowCredentials: "true",
-	}
-
 	server := &http.Server{
-		Addr:    *address,
-		Handler: middleware.Logging(middleware.Cors(router, corsOptions)),
+		Addr: *address,
+		Handler: middleware.NewMiddlewareChain(
+			middleware.NewLoggingMiddleware(),
+			middleware.NewCorsMiddleware(middleware.CorsOptions{
+				AllowOrigin:      "*",
+				AllowHeaders:     "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token",
+				AllowMethods:     "POST, GET, OPTIONS, PUT, DELETE",
+				AllowCredentials: "true",
+			}),
+		)(router),
 	}
 
 	go func() {
