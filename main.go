@@ -24,7 +24,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	server := RunServer()
+	server := createAndRunServer()
 
 	<-ctx.Done()
 
@@ -41,7 +41,7 @@ func main() {
 	log.Println("Server exiting")
 }
 
-func RunServer() *http.Server {
+func createAndRunServer() *http.Server {
 
 	address := flag.String("address", defaultAddress, "Listening address in format <ip>:<port>")
 	flag.Parse()
